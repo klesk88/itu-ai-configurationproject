@@ -8,6 +8,11 @@
 import java.util.*;
 
 import net.sf.javabdd.*;
+import net.sf.javabdd.BDD.BDDIterator;
+import net.sf.javabdd.BDD.BDDToString;
+import net.sf.javabdd.BDDFactory.BDDOp;
+import net.sf.javabdd.MicroFactory.bdd;
+import net.sf.javabdd.TryVarOrder.BDDOperation;
 
 /**
  * Before column and afte row.
@@ -19,6 +24,7 @@ public class QueensLogic {
 	private int x = 0;
 	private int y = 0;
 	private int[][] board;
+	private boolean[][] auxBoard;
 	private BDDFactory bddFactory;
 	private BDD rules;
 
@@ -30,11 +36,27 @@ public class QueensLogic {
 		this.x = size;
 		this.y = size;
 		this.board = new int[x][y];
+		this.auxBoard = new boolean[x][y];
 		// Initialize the BDD
 		this.bddFactory = JFactory.init(2000000, 200000);
 		this.bddFactory.setVarNum(x * y);
 		this.rules = this.bddFactory.one();
 		this.constructRules();
+
+		/* Print the results */
+		System.out.println("There are " + (long) this.rules.satCount()
+				+ " solutions.");
+		BDD solution = this.rules.satOne();
+		System.out.println("Here is " + (long) solution.satCount()
+				+ " solution:");
+		for (int i = 0; i < this.rules.satCount(); i++) {
+			BDD solution2 = this.rules.satOne();
+			System.out.println("The solution number: " + solution2.satCount());
+			solution2.printSet();
+		}
+		solution.printSet();
+		System.out.println();
+		// this.checkFuture();
 	}
 
 	public int[][] getGameBoard() {
@@ -48,17 +70,24 @@ public class QueensLogic {
 		}
 
 		board[column][row] = 1;
-		for (int i = 0; i < x; i++) {
-			for (int j = 0; j < y; j++) {
-				System.out.print("" + this.board[j][i] + "|");
-			}
-			System.out.println();
-		}
+		// for (int i = 0; i < x; i++) {
+		// for (int j = 0; j < y; j++) {
+		// System.out.print("" + this.board[j][i] + "|");
+		// }
+		// System.out.println();
+		// }
 		this.checkRow(column, row);
 		this.checkColumn(column, row);
 		this.checkDiagonal(column, row);
 		this.checkRules();
 		// this.checkFuture();
+		// for (int i = 0; i < this.x; i++) {
+		// for (int j = 0; j < this.y; j++) {
+		// if (this.auxBoard[i][j] == false && this.board[i][j] != 1) {
+		// this.board[i][j] = -1;
+		// }
+		// }
+		// }
 		return true;
 	}
 
@@ -66,22 +95,22 @@ public class QueensLogic {
 		if (this.checkRules()) {
 			return true;
 		}
+		boolean result = false;
 		for (int k = 0; k < x; k++) {
-			boolean result = false;
 			for (int i = 0; i < x; i++) {
 				for (int j = 0; j < x; j++) {
 					if (this.board[i][j] == 0) {
 						this.board[i][j] = 1;
 						if (this.checkFuture()) {
-							this.board[i][j] = 0;
-						} else {
-							this.board[i][j] = -1;
+							result = true;
+							this.auxBoard[i][j] |= true;
 						}
+						this.board[i][j] = 0;
 					}
 				}
 			}
 		}
-		return false;
+		return result;
 	}
 
 	private boolean checkColumn(final int column, final int row) {
@@ -179,17 +208,13 @@ public class QueensLogic {
 			}
 		}
 
-		System.out.println(state.toString());
 		// Checks if it is true or not
 		BDD restricted = this.rules.restrict(state);
-		List list = restricted.allsat();
-		System.out.println(list);
-		System.out.println(list.size());
 		if (restricted.isOne()) {
-			System.out.println("It is true rules.");
+			// System.out.println("It is true rules.");
 			return true;
 		} else if (restricted.isZero()) {
-			System.out.println("It is false rules");
+			// System.out.println("It is false rules");
 			return false;
 		}
 		return false;

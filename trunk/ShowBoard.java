@@ -8,8 +8,8 @@ import javax.swing.*;
 public class ShowBoard {
 	public static void main(String[] arg) {
 		QueensLogic l = new QueensLogic();
-		
-		int size = 5;
+
+		int size = 4;
 		l.initializeGame(size);
 
 		QueensGUI g = new QueensGUI(l);
