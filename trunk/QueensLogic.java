@@ -24,7 +24,6 @@ public class QueensLogic {
 	private int x = 0;
 	private int y = 0;
 	private int[][] board;
-	private boolean[][] auxBoard;
 	private BDDFactory bddFactory;
 	private BDD rules;
 
@@ -36,27 +35,13 @@ public class QueensLogic {
 		this.x = size;
 		this.y = size;
 		this.board = new int[x][y];
-		this.auxBoard = new boolean[x][y];
 		// Initialize the BDD
 		this.bddFactory = JFactory.init(2000000, 200000);
 		this.bddFactory.setVarNum(x * y);
 		this.rules = this.bddFactory.one();
 		this.constructRules();
 
-		/* Print the results */
-		System.out.println("There are " + (long) this.rules.satCount()
-				+ " solutions.");
-		BDD solution = this.rules.satOne();
-		System.out.println("Here is " + (long) solution.satCount()
-				+ " solution:");
-		for (int i = 0; i < this.rules.satCount(); i++) {
-			BDD solution2 = this.rules.satOne();
-			System.out.println("The solution number: " + solution2.satCount());
-			solution2.printSet();
-		}
-		solution.printSet();
-		System.out.println();
-		// this.checkFuture();
+		this.checkFuture();
 	}
 
 	public int[][] getGameBoard() {
@@ -70,47 +55,50 @@ public class QueensLogic {
 		}
 
 		board[column][row] = 1;
-		// for (int i = 0; i < x; i++) {
-		// for (int j = 0; j < y; j++) {
-		// System.out.print("" + this.board[j][i] + "|");
-		// }
-		// System.out.println();
-		// }
-		this.checkRow(column, row);
-		this.checkColumn(column, row);
-		this.checkDiagonal(column, row);
+//		this.checkRow(column, row);
+//		this.checkColumn(column, row);
+//		this.checkDiagonal(column, row);
 		this.checkRules();
-		// this.checkFuture();
-		// for (int i = 0; i < this.x; i++) {
-		// for (int j = 0; j < this.y; j++) {
-		// if (this.auxBoard[i][j] == false && this.board[i][j] != 1) {
-		// this.board[i][j] = -1;
-		// }
-		// }
-		// }
+		this.checkFuture();
 		return true;
 	}
 
-	private boolean checkFuture() {
-		if (this.checkRules()) {
-			return true;
-		}
-		boolean result = false;
-		for (int k = 0; k < x; k++) {
-			for (int i = 0; i < x; i++) {
-				for (int j = 0; j < x; j++) {
-					if (this.board[i][j] == 0) {
-						this.board[i][j] = 1;
-						if (this.checkFuture()) {
-							result = true;
-							this.auxBoard[i][j] |= true;
-						}
-						this.board[i][j] = 0;
-					}
+	private void checkFuture() {
+		BDD state = this.bddFactory.one();
+		for (int i = 0; i < x; i++) {
+			for (int j = 0; j < x; j++) {
+				if (this.board[i][j] == 1) {
+					state = state.and(this.bddFactory.ithVar(x * i + j));
 				}
 			}
 		}
-		return result;
+
+		// Checks if it is true or not
+		BDD restricted = this.rules.restrict(state);
+		/* Print the results */
+		System.out.println();
+		int[][] auxBoard = new int[this.x][this.y];
+		Iterator<byte[]> it = restricted.allsat().iterator();
+		int numberSolutions = 0;
+		while (it.hasNext()) {
+			numberSolutions++;
+			byte[] a = it.next();
+			for (int i = 0; i < a.length; i++) {
+				if (a[i] == 1) {
+					auxBoard[i / this.x][i % this.x] = 1;
+				}
+			}
+		}
+		for (int i = 0; i < this.x; i++) {
+			for (int j = 0; j < this.y; j++) {
+				if (numberSolutions == 1 & auxBoard[i][j] == 1) {
+					this.board[i][j] = 1;
+				}
+				if (this.board[i][j] == 0 & auxBoard[i][j] != 1) {
+					this.board[i][j] = -1;
+				}
+			}
+		}
 	}
 
 	private boolean checkColumn(final int column, final int row) {
