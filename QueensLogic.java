@@ -45,7 +45,7 @@ public class QueensLogic {
 		this.y = size;
 		this.board = new int[x][y];
 		// Initialize the BDD
-		this.bddFactory = JFactory.init(2000000, 200000);
+		this.bddFactory = JFactory.init(40000000, 4000000);
 		this.bddFactory.setVarNum(x * y);
 		this.rules = this.bddFactory.one();
 		this.constructRules();
@@ -83,7 +83,8 @@ public class QueensLogic {
 		for (int i = 0; i < x; i++) {
 			for (int j = 0; j < x; j++) {
 				if (this.board[i][j] == 1) {
-					state = state.and(this.bddFactory.ithVar(x * i + j));
+					state = state
+							.and(this.bddFactory.ithVar(this.bddPos(i, j)));
 				}
 			}
 		}
@@ -102,6 +103,7 @@ public class QueensLogic {
 				}
 			}
 		}
+		System.out.println(numberSolutions);
 		// Translate the results to the board
 		for (int i = 0; i < this.x; i++) {
 			for (int j = 0; j < this.y; j++) {
@@ -132,13 +134,16 @@ public class QueensLogic {
 		for (int i = 0; i < x; i++) {
 			rule2 = this.bddFactory.zero();
 			for (int k = 0; k < x; k++) {
-				rule = this.bddFactory.ithVar(x * k + i);
+				// The value than must be true
+				rule = this.bddFactory.ithVar(this.bddPos(k, i));
 				for (int j = 0; j < x; j++) {
 					if (k == j) {
 						continue;
 					}
-					rule = rule.and(this.bddFactory.nithVar(x * j + i));
+					// The values than must be false
+					rule = rule.and(this.bddFactory.nithVar(this.bddPos(j, i)));
 				}
+				// Only one combination true in each row
 				rule2 = rule2.or(rule);
 			}
 			this.rules = this.rules.and(rule2);
@@ -147,13 +152,16 @@ public class QueensLogic {
 		for (int i = 0; i < x; i++) {
 			rule2 = this.bddFactory.zero();
 			for (int k = 0; k < x; k++) {
-				rule = this.bddFactory.ithVar(x * i + k);
+				// The value than must be true
+				rule = this.bddFactory.ithVar(this.bddPos(i, k));
 				for (int j = 0; j < x; j++) {
 					if (k == j) {
 						continue;
 					}
-					rule = rule.and(this.bddFactory.nithVar(x * i + j));
+					// The values than must be false
+					rule = rule.and(this.bddFactory.nithVar(this.bddPos(i, j)));
 				}
+				// Only one combination true in each column
 				rule2 = rule2.or(rule);
 			}
 			this.rules = this.rules.and(rule2);
@@ -162,13 +170,16 @@ public class QueensLogic {
 		for (int ii = 0; ii < x; ii++) {
 			rule2 = this.bddFactory.zero();
 			for (int jj = 0; jj < x; jj++) {
-				rule = this.bddFactory.ithVar(x * ii + jj);
+				// The value than must be true
+				rule = this.bddFactory.ithVar(this.bddPos(ii, jj));
 				for (int i = ii, j = jj; i < x & j < x; i++, j++) {
 					if (ii == i & jj == j) {
 						continue;
 					}
-					rule = rule.and(this.bddFactory.nithVar(x * i + j));
+					// The values than must be false
+					rule = rule.and(this.bddFactory.nithVar(this.bddPos(i, j)));
 				}
+				// Only one combination true in each diagonal
 				rule2 = rule2.or(rule);
 			}
 			this.rules = this.rules.and(rule2);
@@ -177,13 +188,16 @@ public class QueensLogic {
 		for (int ii = x - 1; ii >= 0; ii--) {
 			rule2 = this.bddFactory.zero();
 			for (int jj = 0; jj < x; jj++) {
-				rule = this.bddFactory.ithVar(x * ii + jj);
+				// The value than must be true
+				rule = this.bddFactory.ithVar(this.bddPos(ii, jj));
 				for (int i = ii, j = jj; i >= 0 & j < x; i--, j++) {
 					if (ii == i & jj == j) {
 						continue;
 					}
-					rule = rule.and(this.bddFactory.nithVar(x * i + j));
+					// The values than must be false
+					rule = rule.and(this.bddFactory.nithVar(this.bddPos(i, j)));
 				}
+				// Only one combination true in each diagonal
 				rule2 = rule2.or(rule);
 			}
 			this.rules = this.rules.and(rule2);
@@ -199,9 +213,9 @@ public class QueensLogic {
 		BDD state = this.bddFactory.one();
 		for (int i = 0; i < x; i++) {
 			for (int j = 0; j < x; j++) {
-				state = state
-						.and(this.board[i][j] == 1 ? this.bddFactory.ithVar(x
-								* i + j) : this.bddFactory.nithVar(x * i + j));
+				state = state.and(this.board[i][j] == 1 ? this.bddFactory
+						.ithVar(this.bddPos(i, j)) : this.bddFactory
+						.nithVar(this.bddPos(i, j)));
 			}
 		}
 
@@ -213,6 +227,19 @@ public class QueensLogic {
 			return false;
 		}
 		return false;
+	}
+
+	/**
+	 * Translates a position in the matrix to its value in the BDD.
+	 * 
+	 * @param column
+	 *            The column in the matrix.
+	 * @param row
+	 *            The row in the matrix.
+	 * @return The equivalent position in the array of the BDD.
+	 */
+	private int bddPos(final int column, final int row) {
+		return this.x * column + row;
 	}
 
 }
