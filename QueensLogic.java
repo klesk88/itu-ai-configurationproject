@@ -8,23 +8,32 @@
 import java.util.*;
 
 import net.sf.javabdd.*;
-import net.sf.javabdd.BDD.BDDIterator;
-import net.sf.javabdd.BDD.BDDToString;
-import net.sf.javabdd.BDDFactory.BDDOp;
-import net.sf.javabdd.MicroFactory.bdd;
-import net.sf.javabdd.TryVarOrder.BDDOperation;
 
 /**
- * Before column and afte row.
+ * Solves the problems of the n-queens.
  * 
- * @author Juan
  * 
  */
 public class QueensLogic {
+	/**
+	 * The height of the board.
+	 */
 	private int x = 0;
+	/**
+	 * The width of the board.
+	 */
 	private int y = 0;
+	/**
+	 * The board containing the queens.
+	 */
 	private int[][] board;
+	/**
+	 * Creates new BDD and other useful stuff.
+	 */
 	private BDDFactory bddFactory;
+	/**
+	 * Contains the rules of the n-queens problem.
+	 */
 	private BDD rules;
 
 	public QueensLogic() {
