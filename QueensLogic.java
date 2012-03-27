@@ -41,30 +41,36 @@ public class QueensLogic {
 		this.rules = this.bddFactory.one();
 		this.constructRules();
 
-		this.checkFuture();
+		this.board = this.helpUser();
 	}
 
 	public int[][] getGameBoard() {
-		return board;
+		return this.board;
 	}
 
 	public boolean insertQueen(int column, int row) {
 
-		if (board[column][row] == -1 || board[column][row] == 1) {
+		if (this.board[column][row] == -1 || this.board[column][row] == 1) {
 			return true;
 		}
 
-		board[column][row] = 1;
-//		this.checkRow(column, row);
-//		this.checkColumn(column, row);
-//		this.checkDiagonal(column, row);
+		this.board[column][row] = 1;
 		this.checkRules();
-		this.checkFuture();
+		this.board = this.helpUser();
 		return true;
 	}
 
-	private void checkFuture() {
+	/**
+	 * Calculates the invalid positions where isn't possible put a queen and
+	 * copy them to the board. Furthermore calculates if there is only one
+	 * solution.
+	 * 
+	 * @return An updated board with the new state.
+	 */
+	private int[][] helpUser() {
+		int[][] resultBoard = new int[this.x][this.y];
 		BDD state = this.bddFactory.one();
+		// Copy the state of the board to a BDD
 		for (int i = 0; i < x; i++) {
 			for (int j = 0; j < x; j++) {
 				if (this.board[i][j] == 1) {
@@ -72,14 +78,12 @@ public class QueensLogic {
 				}
 			}
 		}
-
-		// Checks if it is true or not
+		// Apply the state to the rules
 		BDD restricted = this.rules.restrict(state);
-		/* Print the results */
-		System.out.println();
 		int[][] auxBoard = new int[this.x][this.y];
 		Iterator<byte[]> it = restricted.allsat().iterator();
 		int numberSolutions = 0;
+		// Count the solutions and stored the valid positions to put a queen
 		while (it.hasNext()) {
 			numberSolutions++;
 			byte[] a = it.next();
@@ -89,38 +93,29 @@ public class QueensLogic {
 				}
 			}
 		}
+		// Translate the results to the board
 		for (int i = 0; i < this.x; i++) {
 			for (int j = 0; j < this.y; j++) {
-				if (numberSolutions == 1 & auxBoard[i][j] == 1) {
-					this.board[i][j] = 1;
+				// If there is only one solution just copy the result
+				if (this.board[i][j] == 1
+						| (numberSolutions == 1 & auxBoard[i][j] == 1)) {
+					resultBoard[i][j] = 1;
 				}
-				if (this.board[i][j] == 0 & auxBoard[i][j] != 1) {
-					this.board[i][j] = -1;
+				// Put a cross in the invalid positions
+				else if (this.board[i][j] == -1
+						| (this.board[i][j] == 0 & auxBoard[i][j] != 1)) {
+					resultBoard[i][j] = -1;
 				}
 			}
 		}
+		return resultBoard;
 	}
 
-	private boolean checkColumn(final int column, final int row) {
-		// Constructs the rule
-		for (int j = 0; j < x; j++) {
-			if (this.board[column][j] == 0) {
-				this.board[column][j] = -1;
-			}
-		}
-		return false;
-	}
-
-	private boolean checkRow(final int column, final int row) {
-		// Constructs the rule
-		for (int j = 0; j < x; j++) {
-			if (this.board[j][row] == 0) {
-				this.board[j][row] = -1;
-			}
-		}
-		return false;
-	}
-
+	/**
+	 * Constructs the rules than check if the game is finished or it isn't. It
+	 * checks than there is only one and at least one queen in each row, column
+	 * and diagonal.
+	 */
 	private void constructRules() {
 		BDD rule = null;
 		BDD rule2 = null;
@@ -186,6 +181,11 @@ public class QueensLogic {
 		}
 	}
 
+	/**
+	 * Check if the game is finished or not.
+	 * 
+	 * @return True if the current state is a solution and false otherwise.
+	 */
 	private boolean checkRules() {
 		BDD state = this.bddFactory.one();
 		for (int i = 0; i < x; i++) {
@@ -199,33 +199,11 @@ public class QueensLogic {
 		// Checks if it is true or not
 		BDD restricted = this.rules.restrict(state);
 		if (restricted.isOne()) {
-			// System.out.println("It is true rules.");
 			return true;
 		} else if (restricted.isZero()) {
-			// System.out.println("It is false rules");
 			return false;
 		}
 		return false;
 	}
 
-	private void checkDiagonal(final int column, final int row) {
-		int rowStart = row - Math.min(row, column);
-		int columnStart = column - Math.min(row, column);
-
-		for (int i = rowStart, j = columnStart; i < this.x & j < this.y; i++, j++) {
-			if (this.board[j][i] == 0) {
-				this.board[j][i] = -1;
-			}
-		}
-
-		// From bottom up
-		rowStart = row + Math.min(column, this.x - 1 - row);
-		columnStart = column - Math.min(column, this.y - 1 - row);
-
-		for (int i = rowStart, j = columnStart; i >= 0 & j < this.y; i--, j++) {
-			if (this.board[j][i] == 0) {
-				this.board[j][i] = -1;
-			}
-		}
-	}
 }
