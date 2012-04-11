@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path=""/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Users/Juan/Desktop/javabdd-1.0b2.jar">
+	<classpathentry kind="lib" path="C:/Users/Juan/workspace/Intelligent Systems/javabdd-1.0b2.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="file:/C:/Users/Juan/Documents/ITU/Intelligent Systems/apidocs/"/>
 		</attributes>

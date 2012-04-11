@@ -49,7 +49,6 @@ public class QueensLogic {
 		this.bddFactory.setVarNum(x * y);
 		this.rules = this.bddFactory.one();
 		this.constructRules();
-
 		this.board = this.helpUser();
 	}
 
@@ -64,7 +63,6 @@ public class QueensLogic {
 		}
 
 		this.board[column][row] = 1;
-		this.checkRules();
 		this.board = this.helpUser();
 		return true;
 	}
@@ -202,31 +200,6 @@ public class QueensLogic {
 			}
 			this.rules = this.rules.and(rule2);
 		}
-	}
-
-	/**
-	 * Check if the game is finished or not.
-	 * 
-	 * @return True if the current state is a solution and false otherwise.
-	 */
-	private boolean checkRules() {
-		BDD state = this.bddFactory.one();
-		for (int i = 0; i < x; i++) {
-			for (int j = 0; j < x; j++) {
-				state = state.and(this.board[i][j] == 1 ? this.bddFactory
-						.ithVar(this.bddPos(i, j)) : this.bddFactory
-						.nithVar(this.bddPos(i, j)));
-			}
-		}
-
-		// Checks if it is true or not
-		BDD restricted = this.rules.restrict(state);
-		if (restricted.isOne()) {
-			return true;
-		} else if (restricted.isZero()) {
-			return false;
-		}
-		return false;
 	}
 
 	/**
