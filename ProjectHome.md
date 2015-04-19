@@ -1,0 +1,1 @@
+Configuration project about n-queens
